@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from PIL import Image
 import torch
-from .utils import LambdaLR,Logger,ReplayBuffer,ToTensor,Resize3D,Crop3D
+from .utils import LambdaLR,Logger,ReplayBuffer,ToTensor,Resize3D
 import torch.nn.functional as F
 from .utils import Logger
 import numpy as np

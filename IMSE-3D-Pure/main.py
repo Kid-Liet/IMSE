@@ -13,7 +13,7 @@ def get_config(config):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default='Yaml/Reg.yaml', help='Path to the config file.')
+    parser.add_argument('--config', type=str, default='Yaml/Eva.yaml', help='Path to the config file.')
     parser.add_argument('--train', action='store_true',default=True, help='Train mode')
     
     opts = parser.parse_args()

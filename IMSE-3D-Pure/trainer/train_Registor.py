@@ -11,7 +11,7 @@ from .utils import LambdaLR,Logger,ReplayBuffer,ToTensor,Resize3D
 import torch.nn.functional as F
 from .utils import Logger
 import numpy as np
-from .Reg_datasets import ImageDataset,TestDataset,TestDataset2
+from .Reg_datasets import ImageDataset,TestDataset
 from model.Eva_model import Evaluator
 from model.Reg_model import VxmDense
 
@@ -36,7 +36,8 @@ class Reg_Trainer():
         
         self.dataloader = DataLoader(ImageDataset(config['dataroot'],transforms_=self.transforms_1,
                            opt = config, unaligned=False),batch_size=config['batchSize'],shuffle=True,num_workers=config['n_cpu'])
-        
+        self.test_dataloader = DataLoader(TestDataset(config['testroot'],transforms_=self.transforms_1,
+                           opt = config, unaligned=False),batch_size=1,shuffle=False,num_workers=config['n_cpu'])
         
         self.logger = Logger(config['name'],config['port'],config['n_epochs'], len(self.dataloader))
 
@@ -80,7 +81,15 @@ class Reg_Trainer():
                                  'error_map_': error_map_[0,:,int(Depth/2),:,:]})
             torch.save(self.net_R.state_dict(), self.config['save_root'] + 'Registration.pth')
 
- 
+         
+    def cal_dice(self, A, B):
+        A = A.round()
+        B = B.round()
+        num = A.size(0)
+        A_flat = A.view(num, -1)
+        B_flat = B.view(num, -1)
+        inter = (A_flat * B_flat).sum(1)
+        return (2.0 * inter) / (A_flat.sum(1) + B_flat.sum(1))#,(A_flat.sum(1) + B_flat.sum(1))
             
     def test_regisatration(self):
         self.net_R.load_state_dict(torch.load(self.config['save_root'] + 'Registration.pth'))
@@ -92,35 +101,25 @@ class Reg_Trainer():
                 A2B_Jac, B2A_Jac = 0, 0, 
                 A2B_HD95, B2A_HD95 = 0, 0
                 num = 0
-                for RA, RB, FA, FB, A_mask, B_mask in self.test_dataloader:
+                for RA, RB, A_mask, B_mask in self.test_dataloader:
                     RA = RA.cuda()
                     RB = RB.cuda()
                     A_mask = A_mask.cuda()
                     B_mask = B_mask.cuda()
                     befor_mask = self.cal_dice(A_mask, B_mask)
                     befor_hd = HD(A_mask.squeeze(), B_mask.squeeze())
-                    print (befor_mask)
-                    if self.config['mode'] == "Gen":
-                        FA = FA.cuda()
-                        FB = FB.cuda()
-                        flow = self.net_R(FB, RB)  # RA 2 FB-->RB
-                        flow_ = self.net_R(FA, RA)  # RB 2 FA-->RA
-
-                    else:
-                      
-                        flow = self.net_R(RA, RB)
-                        flow_ = self.net_R(RB, RA)
-                        
-                    a2bjdet = smooth_loss(flow)
-                    b2ajdet = smooth_loss(flow_)
-                    a2bnum_jet = jacobian_determinant(flow)    
-                    b2anum_jet = jacobian_determinant(flow_)
                     
-                    
+                     
+                    flow = self.net_R(RA, RB)
+                    flow_ = self.net_R(RB, RA)
                     warp2B_mask = self.trans(A_mask, flow)
                     warp2A_mask = self.trans(B_mask, flow_)
-                    pos_dice = self.cal_dice(warp2B_mask, B_mask)
-                    neg_dice = self.cal_dice(warp2A_mask, A_mask) 
+                    
+                    a2bjdet = smooth_loss(flow)
+                    b2ajdet = smooth_loss(flow_)
+                    
+                    a2b_dice = self.cal_dice(warp2B_mask, B_mask)
+                    b2a_dice = self.cal_dice(warp2A_mask, A_mask) 
                     
                     a2b_HD95 = HD(warp2B_mask.squeeze(), B_mask.squeeze())
                     b2a_HD95= HD(warp2A_mask.squeeze(), A_mask.squeeze())
@@ -128,12 +127,13 @@ class Reg_Trainer():
                     
                     Befor_DICE += befor_mask
                     Befor_HD += befor_hd
-                    Pos_DICE += pos_dice
-                    Neg_DICE += neg_dice 
+                    
+                    A2B_DICE += a2b_dice
+                    B2A_DICE += b2a_dice 
+                    
                     A2B_Jac += a2bjdet
                     B2A_Jac += b2ajdet
-                    A2Bnum_jet += a2bnum_jet
-                    B2Anum_jet += b2anum_jet
+
                     
                     
                     A2B_HD95 += a2b_HD95
@@ -146,12 +146,12 @@ class Reg_Trainer():
                 
                 print ('Befor DC:',Befor_DICE/num)
                 print ('Befor HD:',Befor_HD/num)
-                print ('A2B DC:',Pos_DICE/num)
-                print ('B2A DC:',Neg_DICE/num)
+                print ('A2B DC:',A2B_DICE/num)
+                print ('B2A DC:',B2A_DICE/num)
                 print ('A2B HD95:',A2B_HD95/num)
                 print ('B2A HD95:',B2A_HD95/num)
-                print ('A2B Jac:',A2B_Jac/num, A2Bnum_jet/num)
-                print ('B2A Jac:',B2A_Jac/num, B2Anum_jet/num)
+                print ('A2B Jac:',A2B_Jac)
+                print ('B2A Jac:',B2A_Jac)
                 
                
                 

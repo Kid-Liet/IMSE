@@ -9,6 +9,7 @@ from visdom import Visdom
 import torch.nn.functional as F
 import numpy as np
 import math
+from scipy.ndimage.filters import gaussian_filter
 from medpy import metric
 import pystrum.pynd.ndutils as nd
 import torch.nn as nn
@@ -22,27 +23,7 @@ def setup_seed(seed):
     torch.backends.cudnn.enabled = False
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
-    
-class Resize():
-    def __init__(self, size_tuple, use_cv = True):
-        self.size_tuple = size_tuple
-        self.use_cv = use_cv
 
-
-    def __call__(self, tensor):
-        """
-            Resized the tensor to the specific size
-
-            Arg:    tensor  - The torch.Tensor obj whose rank is 4
-            Ret:    Resized tensor
-        """
-        tensor = tensor.unsqueeze(0)
- 
-        tensor = F.interpolate(tensor, size = [self.size_tuple[0],self.size_tuple[1]])
-
-        tensor = tensor.squeeze(0)
- 
-        return tensor#1, 64, 128, 128
 
 
 class Resize3D():
@@ -65,30 +46,6 @@ class Resize3D():
  
         return tensor
 
-
-class Crop3D():
-    def __init__(self, size_tuple, use_cv = True):
-        self.size_tuple = size_tuple
-        self.use_cv = use_cv
-
-
-    def __call__(self, tensor):
-        """
-            Resized the tensor to the specific size
-
-            Arg:    tensor  - The torch.Tensor obj whose rank is 4
-            Ret:    Resized tensor
-        """
-        shape = tensor.shape
-        D,W,H = shape[1],shape[2],shape[3]
-       
-        star_W = int((W-self.size_tuple[1])/2)
-        star_H = int((H-self.size_tuple[2])/2)  
-        tensor = tensor[:,:,star_W:star_W+self.size_tuple[1],star_H:star_H+self.size_tuple[2]]
-
-        #tensor = tensor.squeeze(0)
- 
-        return tensor
 
 
 
@@ -352,12 +309,37 @@ class Transformer_3D(nn.Module):
         new_locs = new_locs.permute(0, 2, 3, 4, 1)
         new_locs = new_locs[..., [2, 1, 0]]
         warped = F.grid_sample(
-            src, new_locs, align_corners=True, padding_mode="border")
+            src, new_locs, align_corners=True, padding_mode = "border")
 
         return warped
     
     
-    
+class Transformer_3D_cpu(nn.Module):
+    def __init__(self):
+        super(Transformer_3D_cpu, self).__init__()
+
+    def forward(self, src, flow,padding):
+        b = flow.shape[0]
+        d = flow.shape[2]
+        h = flow.shape[3]
+        w = flow.shape[4]
+        size = (d, h, w)
+        vectors = [torch.arange(0, s) for s in size]
+        grids = torch.meshgrid(vectors)
+        grid = torch.stack(grids)
+        grid = grid.to(torch.float32)
+        grid = grid.repeat(b, 1, 1, 1, 1)
+        new_locs = grid + flow
+        shape = flow.shape[2:]
+        for i in range(len(shape)):
+            new_locs[:, i, ...] = 2 * \
+                (new_locs[:, i, ...] / (shape[i] - 1) - 0.5)
+        new_locs = new_locs.permute(0, 2, 3, 4, 1)
+        new_locs = new_locs[..., [2, 1, 0]]
+        warped = F.grid_sample(
+            src, new_locs, align_corners=True, padding_mode = padding)
+
+        return warped    
     
 def upsample_dvf(dvf, o_size):
     b = dvf.shape[0]
@@ -472,30 +454,6 @@ def shuffle_remap(data, ranges = [-1,1], rand_point = [2,50]):
 
     return new_image
 
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    
-
-    
-    return torch.mean(selected_neg_Jdet)#Proportion
 def HD(image,label):
     image ,label = image.detach().cpu().numpy(), label.detach().cpu().numpy()
     haus_dic95 = metric.hd95(image,label)
@@ -509,7 +467,57 @@ def HD(image,label):
 
 
 
+def _NonAffine(imgs, padding_modes,opt,elastic_random=None):
+    if elastic_random is None:
+        elastic_random = torch.rand([3,imgs[0].shape[2],imgs[0].shape[3],imgs[0].shape[4]]).numpy()*2-1#.numpy()
 
+    sigma = opt["gaussian_smoothing"]        #需要根据图像大小调整
+    alpha = opt["non_affine_alpha"]  #需要根据图像大小调整
+    dz = gaussian_filter(elastic_random[0], sigma) * alpha
+    dx = gaussian_filter(elastic_random[1], sigma) * alpha
+    dy = gaussian_filter(elastic_random[2], sigma) * alpha
+
+    dz = np.expand_dims(dz, 0)
+    dx = np.expand_dims(dx, 0)
+    dy = np.expand_dims(dy, 0)
+
+    flow = np.concatenate((dz,dx,dy), 0)
+    flow = np.expand_dims(flow, 0)
+    flow = torch.from_numpy(flow).to(torch.float32)
+
+    res_img = []
+    for img, mode in zip(imgs, padding_modes):
+        img = Transformer_3D_cpu()(img, flow, padding = mode)
+        res_img.append(img.squeeze(0))
+    
+    return res_img[0] if len(res_img) == 1 else res_img
+
+
+
+def _Affine( random_numbers,imgs,padding_modes,opt):
+    D, H, W = imgs[0].shape[2:]
+    n_dims = 3
+    tmp = np.ones(3)
+    tmp[0:3] = random_numbers[0:3]
+    scaling = tmp * opt['scaling'] + 1
+    tmp[0:3] = random_numbers[3:6]
+    rotation = tmp * opt['rotation']
+    tmp[0:2] = random_numbers[6:8]
+    tmp[2] = random_numbers[8]/2
+    translation = tmp * opt['translation'] 
+    theta = create_affine_transformation_matrix(
+        n_dims=n_dims, scaling=scaling, rotation=rotation, shearing=None, translation=translation)
+    theta = theta[:-1, :]
+    theta = torch.from_numpy(theta).to(torch.float32)
+    size = torch.Size((1, 1, D, H, W))
+    grid = F.affine_grid(theta.unsqueeze(0), size, align_corners=True)
+
+    res_img = []
+    for img, mode in zip(imgs, padding_modes):
+        res_img.append(F.grid_sample(img, grid, align_corners=True, padding_mode=mode))
+
+    return res_img[0] if len(res_img) == 1 else res_img
+      
 
 
 
