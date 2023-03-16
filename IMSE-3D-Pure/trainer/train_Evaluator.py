@@ -55,7 +55,8 @@ class Eva_Trainer():
                 self.optimizer_E.step()
 
                 self.logger.log({'loss_E': loss_E,},
-                           images={'A1_noise': A1_noise[0,:,int(Depth/2),:,:], 'A2': A2[0,:,int(Depth/2),:,:],                                                 'Label': Label[0,:,int(Depth/2),:,:],'pred':pred[0,:,int(Depth/2),:,:],                                            })
+                           images={'A1_noise': A1_noise[0,:,int(Depth/2),:,:], 'A2': A2[0,:,int(Depth/2),:,:],
+                                   'Label': Label[0,:,int(Depth/2),:,:],'pred':pred[0,:,int(Depth/2),:,:],})
             
             if not os.path.exists(self.config["save_root"]):
                 os.makedirs(self.config["save_root"])
