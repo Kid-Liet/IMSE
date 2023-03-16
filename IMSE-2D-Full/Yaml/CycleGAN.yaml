@@ -31,4 +31,4 @@ Adv_lamda : 1
 Cyc_lamda : 10
 Iden_lamda: 5
 # output
-save_root:  '/home/klk/code/Regist_Evaluator_2D/output/CycleGan/'   # save weight of model
+save_root:  '/home/klk/code/Regist_Evaluator_2D/output/CycleGAN/'   # save weight of model
