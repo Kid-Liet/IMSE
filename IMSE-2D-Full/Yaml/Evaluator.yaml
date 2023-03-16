@@ -1,5 +1,5 @@
 #####
-name: Evaluator_T1T2
+name: Evaluator
 port: 6019   #  port parameters for visdom
 Noise: True        # Shuffle Remap
 
@@ -30,4 +30,4 @@ cuda: True
 loss: 'L1'
 
 # output root
-save_root: './output/Eva/'   # save weight of model
+save_root: './output/IMSE/'   # save weight of model
