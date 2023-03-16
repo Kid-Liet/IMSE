@@ -76,7 +76,8 @@ class Reg_Trainer():
                 
 
                 self.logger.log({'L_Sim': loss_sim, 'L_Smooth': loss_smooth},
-                           images={'A': A[0,:,int(Depth/2),:,:], 'B': B[0,:,int(Depth/2),:,:],                                                               'A_warp': A_warp[0,:,int(Depth/2),:,:],'B_warp': B_warp[0,:,int(Depth/2),:,:],
+                           images={'A': A[0,:,int(Depth/2),:,:], 'B': B[0,:,int(Depth/2),:,:],
+                                   'A_warp': A_warp[0,:,int(Depth/2),:,:],'B_warp': B_warp[0,:,int(Depth/2),:,:],
                                  'error_map': error_map[0,:,int(Depth/2),:,:],
                                  'error_map_': error_map_[0,:,int(Depth/2),:,:]})
             torch.save(self.net_R.state_dict(), self.config['save_root'] + 'Registration.pth')
