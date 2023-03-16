@@ -1,7 +1,7 @@
 #####
-name: 2D_Registration
+name: Registration
 port: 6019   #  port parameters for visdom
-evaluator_root: '/home/klk/code/Regist_Evaluator_2D/output/IMSE/net_Evaluator_T1T2.pth'
+evaluator_root: './output/IMSE/net_Evaluator.pth'
 # 2D
 dim: 2
 dataroot: '/data/klk/BraTS2019/2D/Train_npy/'    # root directory of the train dataset
