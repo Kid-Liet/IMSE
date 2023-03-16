@@ -44,7 +44,7 @@ class ImageDataset(Dataset):
         ############ 
         # make different non-affine to A and B
         item_A1 = self._NonAffine(imgs = [item_A1],padding_modes=['border'],opt = self.opt)
-        #keep same deformation for A and B
+        # make different non-affine to A and B
         item_A2 = self._NonAffine(imgs = [item_A2],padding_modes=['border'],opt = self.opt)
         
         
