@@ -18,7 +18,7 @@ def main():
     
     opts = parser.parse_args()
     config = get_config(opts.config)
-   
+    print(config)
     
     
     if 'Evaluator' in config['name']:
