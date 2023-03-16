@@ -33,4 +33,4 @@ cuda: True
 n_cpu: 8
 
 # output
-save_root:  '/home/klk/code/Regist_Evaluator_2D/output/Reg/'   # save weight of model
+save_root:  '/home/klk/code/Regist_Evaluator_2D/output/RegGAN/'   # save weight of model
