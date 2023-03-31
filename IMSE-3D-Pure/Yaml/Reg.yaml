@@ -1,0 +1,38 @@
+#####
+name: Registration
+port: 6019   #  port parameters for visdom
+save_root: '/home/klk/code/IMSE-3D-Pure/output/Reg/'   # save weight of model
+
+evaluator_root: '/home/klk/code/IMSE-3D-Pure/output/Eva/Evaluator.pth'  # evaluator root
+
+dataroot: '/data/klk/BraTS2019/3D/Train_npy/'    # root directory of the train dataset
+testroot: '/data/klk/BraTS2019/3D/Test_npy/'    # root directory of the test dataset
+
+
+epoch: 0        # starting epoch
+n_epochs: 200       # How often do you want to display output images during training
+batchSize: 2              # size of the batches
+
+lr: 0.0001                   # initial learning rate
+size: [48,128,128]       # W H
+depth: 48    # D
+input_nc: 2         
+output_nc: 1
+
+
+sim_w: 1.0                #Similarity weight
+smooth_w: 1               # smooth weight
+unet_features: [[16, 32, 32, 32, 32], [32, 32, 32, 32, 16, 16]]
+diff: 0   # Differential homeomorphism
+cuda: True                
+n_cpu: 4
+
+
+# affine
+rotation: 3        # range of rotation if use affine
+translation: 0.08    # range of translation if use affine
+scaling: 0.08      # range of scaling if use affine
+
+# non affine
+non_affine_alpha: 120
+gaussian_smoothing: 12
