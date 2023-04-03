@@ -1,0 +1,24 @@
+#####
+name: Reg
+port: 6019   #  port parameters for visdom
+evaluator_root: '/home/klk/code/Regist_Evaluator/output/Eva/net_MRCT_Eva_Noise_CT_3D.pth'  # evaluator root
+dataroot: '/data/klk/BraTS2019/3D/Train_npy/'    # root directory of the train dataset
+testroot:  '/data/klk/MR2CT/3D/test/'    # root directory of the test dataset
+
+
+
+lr: 1                  # initial learning rate
+size: 128       # W H
+depth: 48    # D
+input_nc: 2         
+output_nc: 1
+
+sim: "Eva" #   MI  NCC  MIND L1  # similarity loss
+sim_w: 1.0                #Similarity weight
+smooth_w: 5         # smooth weight
+
+
+    # range of scaling if use affine
+size_full: [48,128,128]
+
+max_iter: 200

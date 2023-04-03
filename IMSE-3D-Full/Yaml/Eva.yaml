@@ -1,0 +1,23 @@
+#####
+name: Eva
+
+port: 6019   #  port parameters for visdom
+save_root: '/home/klk/code/Regist_Evaluator/output/Eva/'   # save weight of model
+epoch: 0        # starting epoch
+n_epochs: 2000       # How often do you want to display output images during training
+batchSize: 2               # size of the batches
+dataroot: '/data/klk/BraTS2019/3D/Train_npy/'    # root directory of the train dataset
+lr: 0.0001               # initial learning rate
+size: 128       # W H
+depth: 48    # D
+input_nc: 2         
+output_nc: 1                  
+cuda: True                
+n_cpu: 8
+loss: 'L1'
+affine: True       #use affine？
+rotation: 4        # range of rotation if use affine
+translation: 0.08    # range of translation if use affine
+scaling: 0.08       # range of scaling if use affine
+non_affine_alpha: 160
+gaussian_smoothing: 12

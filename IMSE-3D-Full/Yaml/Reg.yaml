@@ -1,0 +1,35 @@
+#####
+name: Reg
+port: 6019   #  port parameters for visdom
+save_root: '/home/klk/code/Regist_Evaluator/output/Reg/'   # save weight of model
+evaluator_root: '/home/klk/code/Regist_Evaluator/output/Eva/Evaluator.pth'  # evaluator root
+dataroot: '/data/klk/BraTS2019/3D/Train_npy/'    # root directory of the train dataset
+testroot: '/data/klk/BraTS2019/3D_warp/'    # root directory of the test dataset
+
+
+epoch: 0        # starting epoch
+n_epochs: 600       # How often do you want to display output images during training
+batchSize: 1              # size of the batches
+
+lr: 0.0001                   # initial learning rate
+size: 128       # W H
+depth: 48    # D
+input_nc: 2         
+output_nc: 1
+mode: 'Tra'  #Gen  ，Eva ， Tra       # Generator ,Evaluator ，traditional Multimodal operator
+sim: "MIND" #   MI  NCC  MIND L1  # similarity loss
+sim_w: 1.0                #Similarity weight
+smooth_w: 1               # smooth weight
+unet_features: [[16, 32, 32, 64, 64], [64, 64, 32, 32, 16, 16]] #[[16, 32, 32, 32, 32], [32, 32, 32, 32, 16, 16]]
+diff: 0   # Differential homeomorphism
+cuda: True                
+n_cpu: 4
+
+affine: True       #use affine？   
+CNSN: False        #use cross norm and self norm?
+rotation: 1        # range of rotation if use affine
+translation: 0.01   # range of translation if use affine
+scaling: 0.01      # range of scaling if use affine
+size_full: [48,128,128]
+non_affine_alpha: 120
+gaussian_smoothing: 12
