@@ -51,7 +51,7 @@ class ImageDataset(Dataset):
 class TestDataset(Dataset):
     def __init__(self, root,transforms_,opt,unaligned=False):
         self.transforms = transforms.Compose(transforms_)
-        self.files_root = sorted(glob.glob("%s/*" % root))[:3]
+        self.files_root = sorted(glob.glob("%s/*" % root))
         self.opt = opt
         self._Affine = _Affine
         self._NonAffine = _NonAffine
