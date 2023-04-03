@@ -93,66 +93,66 @@ class Reg_Trainer():
             
     def test_regisatration(self):
         self.net_R.load_state_dict(torch.load(self.config['save_root'] + 'Registration.pth'))
-        with torch.no_grad():
-                #the dice and hd95 befor deformation registration 
-                Befor_DICE,Befor_HD= 0, 0 
-                #the result of after registration
-                A2B_DICE, B2A_DICE = 0, 0, 
-                A2B_Jac, B2A_Jac = 0, 0, 
-                A2B_HD95, B2A_HD95 = 0, 0
-                num = 0
-                for RA, RB, A_mask, B_mask in self.test_dataloader:
-                    RA = RA.cuda()
-                    RB = RB.cuda()
-                    A_mask = A_mask.cuda()
-                    B_mask = B_mask.cuda()
-                    befor_mask = self.cal_dice(A_mask, B_mask)
-                    befor_hd = HD(A_mask.squeeze(), B_mask.squeeze())
-                    
-                     
-                    flow = self.net_R(RA, RB)
-                    flow_ = self.net_R(RB, RA)
-                    warp2B_mask = self.trans(A_mask, flow)
-                    warp2A_mask = self.trans(B_mask, flow_)
-                    
-                    a2bjdet = smooth_loss(flow)
-                    b2ajdet = smooth_loss(flow_)
-                    
-                    a2b_dice = self.cal_dice(warp2B_mask, B_mask)
-                    b2a_dice = self.cal_dice(warp2A_mask, A_mask) 
-                    
-                    a2b_HD95 = HD(warp2B_mask.squeeze(), B_mask.squeeze())
-                    b2a_HD95= HD(warp2A_mask.squeeze(), A_mask.squeeze())
+        self.net_R.eval()
+            #the dice and hd95 befor deformation registration 
+            Befor_DICE,Befor_HD= 0, 0 
+            #the result of after registration
+            A2B_DICE, B2A_DICE = 0, 0, 
+            A2B_Jac, B2A_Jac = 0, 0, 
+            A2B_HD95, B2A_HD95 = 0, 0
+            num = 0
+            for RA, RB, A_mask, B_mask in self.test_dataloader:
+                RA = RA.cuda()
+                RB = RB.cuda()
+                A_mask = A_mask.cuda()
+                B_mask = B_mask.cuda()
+                befor_mask = self.cal_dice(A_mask, B_mask)
+                befor_hd = HD(A_mask.squeeze(), B_mask.squeeze())
 
-                    
-                    Befor_DICE += befor_mask
-                    Befor_HD += befor_hd
-                    
-                    A2B_DICE += a2b_dice
-                    B2A_DICE += b2a_dice 
-                    
-                    A2B_Jac += a2bjdet
-                    B2A_Jac += b2ajdet
 
-                    
-                    
-                    A2B_HD95 += a2b_HD95
-                    B2A_HD95 += b2a_HD95
+                flow = self.net_R(RA, RB)
+                flow_ = self.net_R(RB, RA)
+                warp2B_mask = self.trans(A_mask, flow)
+                warp2A_mask = self.trans(B_mask, flow_)
 
-                    num += 1
-                    
-                    
-                    
-                
-                print ('Befor DC:',Befor_DICE/num)
-                print ('Befor HD:',Befor_HD/num)
-                print ('A2B DC:',A2B_DICE/num)
-                print ('B2A DC:',B2A_DICE/num)
-                print ('A2B HD95:',A2B_HD95/num)
-                print ('B2A HD95:',B2A_HD95/num)
-                print ('A2B Jac:',A2B_Jac)
-                print ('B2A Jac:',B2A_Jac)
-                
+                a2bjdet = smooth_loss(flow)
+                b2ajdet = smooth_loss(flow_)
+
+                a2b_dice = self.cal_dice(warp2B_mask, B_mask)
+                b2a_dice = self.cal_dice(warp2A_mask, A_mask) 
+
+                a2b_HD95 = HD(warp2B_mask.squeeze(), B_mask.squeeze())
+                b2a_HD95= HD(warp2A_mask.squeeze(), A_mask.squeeze())
+
+
+                Befor_DICE += befor_mask
+                Befor_HD += befor_hd
+
+                A2B_DICE += a2b_dice
+                B2A_DICE += b2a_dice 
+
+                A2B_Jac += a2bjdet
+                B2A_Jac += b2ajdet
+
+
+
+                A2B_HD95 += a2b_HD95
+                B2A_HD95 += b2a_HD95
+
+                num += 1
+
+
+
+
+            print ('Befor DC:',Befor_DICE/num)
+            print ('Befor HD:',Befor_HD/num)
+            print ('A2B DC:',A2B_DICE/num)
+            print ('B2A DC:',B2A_DICE/num)
+            print ('A2B HD95:',A2B_HD95/num)
+            print ('B2A HD95:',B2A_HD95/num)
+            print ('A2B Jac:',A2B_Jac)
+            print ('B2A Jac:',B2A_Jac)
+
                
                 
                 
