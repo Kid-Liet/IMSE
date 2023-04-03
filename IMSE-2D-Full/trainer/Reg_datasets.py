@@ -83,15 +83,15 @@ class TestDataset(Dataset):
         if self.opt['mode'] == "Gen":
             
             item_FB = self.transforms(np.load(self.files_FB[index % len(self.files_FB)]).astype(np.float32))
-            if self.opt['affine']:
-                random_numbers = torch.rand(8).numpy() * 2 - 1
-                item_FB, item_Mask_A = self.affine(random_numbers=random_numbers,
-                                                            imgs=[item_FB, item_MASK],
-                                                            padding_modes=['border',  'zeros'], opt=self.opt)
-                random_numbers = torch.rand(8).numpy() * 2 - 1
-                item_RB, item_Mask_B = self.affine(random_numbers=random_numbers,
-                                                            imgs=[item_RB, item_MASK],
-                                                            padding_modes=['border', 'zeros'], opt=self.opt)
+            
+            random_numbers = torch.rand(8).numpy() * 2 - 1
+            item_FB, item_Mask_A = self.affine(random_numbers=random_numbers,
+                                                        imgs=[item_FB, item_MASK],
+                                                        padding_modes=['border',  'zeros'], opt=self.opt)
+            random_numbers = torch.rand(8).numpy() * 2 - 1
+            item_RB, item_Mask_B = self.affine(random_numbers=random_numbers,
+                                                        imgs=[item_RB, item_MASK],
+                                                        padding_modes=['border', 'zeros'], opt=self.opt)
 
             item_FB, item_Mask_A = self.non_affine(imgs=[item_FB, item_Mask_A],
                                                             padding_modes=['border', 'zeros'], opt=self.opt)
