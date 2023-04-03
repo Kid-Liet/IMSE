@@ -5,7 +5,7 @@ Get the full paper on [Arxiv](https://arxiv.org/pdf/2303.00369.pdf).
 This paper has been accepted by [CVPR 2023]
 
 The main codes are divided into 3D full version, 2D full version and 3D pure version. Among them, the pure version only includes the training of the evaluator and the training of registration. It does not include others experiment, which is for the convenience of readers who only focus on the IMSE method.
-We will provide code details in the following documents
+We will provide code details in the following documents(https://zhuanlan.zhihu.com/p/614185375).
 
 ## Main Reference Environment
 1. Linux         (Titan RTX)
